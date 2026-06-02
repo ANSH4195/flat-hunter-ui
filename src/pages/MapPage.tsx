@@ -3,9 +3,9 @@ import { MapContainer, TileLayer, Circle, CircleMarker, Tooltip, Popup } from 'r
 import { fetchProperties, type Property } from '@/lib/supabase'
 import { formatRent, hexColor, rubrikColor, cn } from '@/lib/utils'
 
-const HEXAWARE = { latlng: [12.9719, 77.7469] as [number, number], label: 'Hexaware', radius: 5000 }
+const HEXAWARE = { latlng: [12.9897, 77.7281] as [number, number], label: 'Hexaware', radius: 5000 }
 const RUBRIK   = { latlng: [12.9259, 77.6762] as [number, number], label: 'Rubrik',   radius: 8000 }
-const CENTER: [number, number] = [12.9489, 77.7116]
+const CENTER: [number, number] = [12.9578, 77.7022]
 
 export default function MapPage() {
   const [properties, setProperties] = useState<Property[]>([])

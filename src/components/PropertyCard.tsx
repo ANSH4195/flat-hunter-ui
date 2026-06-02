@@ -29,8 +29,10 @@ export default function PropertyCard({ p }: { p: Property }) {
           <img
             src={thumb}
             alt={p.society_name || p.locality}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
             loading="lazy"
+            decoding="async"
+            onLoad={(e) => (e.currentTarget.style.opacity = '1')}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">

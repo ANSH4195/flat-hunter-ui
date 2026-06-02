@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/counter.ts","./src/main.ts","./src/lib/supabase.ts","./src/lib/utils.ts","./src/pages/ListPage.tsx","./src/pages/MapPage.tsx"],"version":"6.0.3"}
+{"root":["./src/App.tsx","./src/fonts.d.ts","./src/main.tsx","./src/components/PropertyCard.tsx","./src/lib/supabase.ts","./src/lib/utils.ts","./src/pages/ListPage.tsx","./src/pages/MapPage.tsx"],"version":"6.0.3"}

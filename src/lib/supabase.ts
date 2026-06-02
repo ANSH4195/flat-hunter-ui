@@ -47,3 +47,14 @@ export async function fetchProperties(): Promise<Property[]> {
   if (error) throw error
   return (data ?? []) as Property[]
 }
+
+export async function fetchLastUpdated(): Promise<string | null> {
+  const { data } = await supabase
+    .from('scrape_runs')
+    .select('run_at')
+    .eq('status', 'ok')
+    .order('run_at', { ascending: false })
+    .limit(1)
+    .single()
+  return data?.run_at ?? null
+}

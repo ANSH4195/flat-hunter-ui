@@ -40,8 +40,8 @@ export async function fetchProperties(): Promise<Property[]> {
     .select('*')
     .eq('is_active', true)
     .lte('total_rent', 55000)
-    .lte('dist_hexaware_km', 5)
-    .lte('dist_rubrik_km', 8)
+    .lte('dist_hexaware_km', 10)
+    .lte('dist_rubrik_km', 12)
     .order('first_seen_at', { ascending: false })
 
   if (error) throw error

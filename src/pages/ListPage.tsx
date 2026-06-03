@@ -33,6 +33,8 @@ export default function ListPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [maxRent, setMaxRent] = useState(55000)
+  const [maxHex, setMaxHex] = useState(10)
+  const [maxRub, setMaxRub] = useState(12)
   const [furnishing, setFurnishing] = useState<Furnishing | 'all'>('all')
   const [society, setSociety] = useState('all')
   const [sort, setSort] = useState<Sort>('newest')
@@ -54,7 +56,11 @@ export default function ListPage() {
   }, [properties])
 
   const filtered = useMemo(() => {
-    let list = properties.filter((p) => p.total_rent <= maxRent)
+    let list = properties.filter((p) =>
+      p.total_rent <= maxRent &&
+      p.dist_hexaware_km <= maxHex &&
+      p.dist_rubrik_km <= maxRub
+    )
     if (furnishing !== 'all') list = list.filter((p) => p.furnishing === furnishing)
     if (society !== 'all') list = list.filter((p) => p.society_name?.trim() === society)
     switch (sort) {
@@ -63,10 +69,12 @@ export default function ListPage() {
       case 'rubrik':   return [...list].sort((a, b) => a.dist_rubrik_km - b.dist_rubrik_km)
       default:         return list
     }
-  }, [properties, maxRent, furnishing, society, sort])
+  }, [properties, maxRent, maxHex, maxRub, furnishing, society, sort])
 
   function resetFilters() {
     setMaxRent(55000)
+    setMaxHex(10)
+    setMaxRub(12)
     setFurnishing('all')
     setSociety('all')
   }
@@ -84,6 +92,28 @@ export default function ListPage() {
             className="w-28 accent-gray-900"
           />
           <span className="text-sm font-medium w-10">{formatRent(maxRent)}</span>
+        </div>
+
+        {/* Hexaware distance slider */}
+        <div className="flex items-center gap-3 min-w-48">
+          <span className="text-sm text-gray-500 whitespace-nowrap">Hexaware</span>
+          <input
+            type="range" min={1} max={10} step={1} value={maxHex}
+            onChange={(e) => setMaxHex(Number(e.target.value))}
+            className="w-28 accent-blue-600"
+          />
+          <span className="text-sm font-medium w-12">≤{maxHex}km</span>
+        </div>
+
+        {/* Rubrik distance slider */}
+        <div className="flex items-center gap-3 min-w-48">
+          <span className="text-sm text-gray-500 whitespace-nowrap">Rubrik</span>
+          <input
+            type="range" min={1} max={12} step={1} value={maxRub}
+            onChange={(e) => setMaxRub(Number(e.target.value))}
+            className="w-28 accent-orange-500"
+          />
+          <span className="text-sm font-medium w-12">≤{maxRub}km</span>
         </div>
 
         {/* Furnishing chips */}

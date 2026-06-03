@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchProperties, fetchLastUpdated, type Property } from '@/lib/supabase'
 import { formatRent } from '@/lib/utils'
+import { useBlacklist } from '@/lib/useBlacklist'
 import PropertyCard from '@/components/PropertyCard'
 
 type Sort = 'newest' | 'cheapest' | 'hex' | 'rubrik'
@@ -38,6 +39,20 @@ export default function ListPage() {
   const [furnishing, setFurnishing] = useState<Furnishing | 'all'>('all')
   const [society, setSociety] = useState('all')
   const [sort, setSort] = useState<Sort>('newest')
+  const [showBanned, setShowBanned] = useState(false)
+  const bannedRef = useRef<HTMLDivElement>(null)
+
+  const { blacklist, ban, unban } = useBlacklist()
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (bannedRef.current && !bannedRef.current.contains(e.target as Node)) {
+        setShowBanned(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     Promise.all([fetchProperties(), fetchLastUpdated()])
@@ -59,7 +74,8 @@ export default function ListPage() {
     let list = properties.filter((p) =>
       p.total_rent <= maxRent &&
       p.dist_hexaware_km <= maxHex &&
-      p.dist_rubrik_km <= maxRub
+      p.dist_rubrik_km <= maxRub &&
+      !blacklist.has(p.society_name?.trim() ?? '')
     )
     if (furnishing !== 'all') list = list.filter((p) => p.furnishing === furnishing)
     if (society !== 'all') list = list.filter((p) => p.society_name?.trim() === society)
@@ -69,7 +85,7 @@ export default function ListPage() {
       case 'rubrik':   return [...list].sort((a, b) => a.dist_rubrik_km - b.dist_rubrik_km)
       default:         return list
     }
-  }, [properties, maxRent, maxHex, maxRub, furnishing, society, sort])
+  }, [properties, maxRent, maxHex, maxRub, blacklist, furnishing, society, sort])
 
   function resetFilters() {
     setMaxRent(55000)
@@ -144,6 +160,37 @@ export default function ListPage() {
           ))}
         </select>
 
+        {/* Blacklist pill */}
+        {blacklist.size > 0 && (
+          <div className="relative" ref={bannedRef}>
+            <button
+              onClick={() => setShowBanned((v) => !v)}
+              className="text-sm px-3 py-1 rounded-full border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+            >
+              {blacklist.size} hidden
+            </button>
+            {showBanned && (
+              <div className="absolute top-full left-0 mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-3 min-w-52">
+                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">Hidden societies</p>
+                <ul className="flex flex-col gap-1">
+                  {Array.from(blacklist).sort().map((s) => (
+                    <li key={s} className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-gray-700 truncate">{s}</span>
+                      <button
+                        onClick={() => { unban(s); if (blacklist.size === 1) setShowBanned(false) }}
+                        className="text-xs text-gray-400 hover:text-red-600 transition-colors shrink-0"
+                        title="Unhide"
+                      >
+                        Unhide
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Sort */}
         <select
           value={sort}
@@ -171,7 +218,13 @@ export default function ListPage() {
 
         {!loading && !error && filtered.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.map((p) => <PropertyCard key={p.id} p={p} />)}
+            {filtered.map((p) => (
+              <PropertyCard
+                key={p.id}
+                p={p}
+                onBan={p.society_name ? () => ban(p.society_name.trim()) : undefined}
+              />
+            ))}
           </div>
         )}
 

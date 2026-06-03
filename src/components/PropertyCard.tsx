@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { Ban, ExternalLink } from 'lucide-react'
 import { cn, hexColor, rubrikColor, formatRent } from '@/lib/utils'
 import type { Property } from '@/lib/supabase'
 
@@ -13,7 +13,7 @@ function isNew(isoDate: string): boolean {
   return Date.now() - new Date(isoDate).getTime() < 48 * 60 * 60 * 1000
 }
 
-export default function PropertyCard({ p }: { p: Property }) {
+export default function PropertyCard({ p, onBan }: { p: Property; onBan?: () => void }) {
   const thumb = p.images?.[0]
   const furnishLabel = FURNISHING_LABEL[p.furnishing] ?? ''
   const maintenanceBreakdown =
@@ -22,7 +22,7 @@ export default function PropertyCard({ p }: { p: Property }) {
       : null
 
   return (
-    <article className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
       {/* Thumbnail */}
       <div className="relative h-40 bg-gray-100 shrink-0">
         {thumb ? (
@@ -43,6 +43,15 @@ export default function PropertyCard({ p }: { p: Property }) {
           <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
             New
           </span>
+        )}
+        {onBan && p.society_name && (
+          <button
+            onClick={(e) => { e.preventDefault(); onBan() }}
+            title={`Hide all listings from ${p.society_name}`}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full p-1 shadow-sm"
+          >
+            <Ban className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
 

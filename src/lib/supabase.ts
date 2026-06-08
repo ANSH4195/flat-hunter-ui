@@ -48,6 +48,49 @@ export async function fetchProperties(): Promise<Property[]> {
   return (data ?? []) as Property[]
 }
 
+export type Society = {
+  name: string
+  locality: string
+  lat: number
+  lng: number
+  dist_hexaware_km: number
+  dist_rubrik_km: number
+  active_count: number
+}
+
+export async function fetchSocieties(): Promise<Society[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('society_name, locality, lat, lng, dist_hexaware_km, dist_rubrik_km, is_active')
+    .not('society_name', 'is', null)
+    .neq('society_name', '')
+
+  if (error) throw error
+
+  const map = new Map<string, Society>()
+  for (const row of (data ?? []) as Array<{
+    society_name: string; locality: string; lat: number; lng: number
+    dist_hexaware_km: number; dist_rubrik_km: number; is_active: boolean
+  }>) {
+    const name = row.society_name.trim()
+    if (!name) continue
+    if (!map.has(name)) {
+      map.set(name, {
+        name,
+        locality: row.locality,
+        lat: row.lat,
+        lng: row.lng,
+        dist_hexaware_km: row.dist_hexaware_km,
+        dist_rubrik_km: row.dist_rubrik_km,
+        active_count: 0,
+      })
+    }
+    if (row.is_active) map.get(name)!.active_count++
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.dist_hexaware_km - b.dist_hexaware_km)
+}
+
 export async function fetchLastUpdated(): Promise<string | null> {
   const { data } = await supabase
     .from('scrape_runs')

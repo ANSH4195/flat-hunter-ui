@@ -48,7 +48,27 @@ export async function fetchProperties(): Promise<Property[]> {
   return (data ?? []) as Property[]
 }
 
+// All known societies in the area (seeded from OSM via scraper/seed_societies.py)
 export type Society = {
+  osm_ref: string
+  name: string
+  lat: number
+  lng: number
+  dist_hexaware_km: number
+  dist_rubrik_km: number
+}
+
+export async function fetchSocieties(): Promise<Society[]> {
+  const { data, error } = await supabase
+    .from('societies')
+    .select('osm_ref, name, lat, lng, dist_hexaware_km, dist_rubrik_km')
+    .order('dist_hexaware_km')
+  if (error) throw error
+  return (data ?? []) as Society[]
+}
+
+// Active listing counts per NoBroker-scraped society
+export type ScrapedSociety = {
   name: string
   locality: string
   lat: number
@@ -58,16 +78,15 @@ export type Society = {
   active_count: number
 }
 
-export async function fetchSocieties(): Promise<Society[]> {
+export async function fetchScrapedSocieties(): Promise<ScrapedSociety[]> {
   const { data, error } = await supabase
     .from('properties')
     .select('society_name, locality, lat, lng, dist_hexaware_km, dist_rubrik_km, is_active')
     .not('society_name', 'is', null)
     .neq('society_name', '')
-
   if (error) throw error
 
-  const map = new Map<string, Society>()
+  const map = new Map<string, ScrapedSociety>()
   for (const row of (data ?? []) as Array<{
     society_name: string; locality: string; lat: number; lng: number
     dist_hexaware_km: number; dist_rubrik_km: number; is_active: boolean
@@ -88,7 +107,7 @@ export async function fetchSocieties(): Promise<Society[]> {
     if (row.is_active) map.get(name)!.active_count++
   }
 
-  return Array.from(map.values()).sort((a, b) => a.dist_hexaware_km - b.dist_hexaware_km)
+  return Array.from(map.values())
 }
 
 export async function fetchLastUpdated(): Promise<string | null> {

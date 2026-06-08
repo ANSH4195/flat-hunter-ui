@@ -89,9 +89,15 @@ export default function SocietiesPage() {
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([fetchSocieties(), fetchScrapedSocieties()])
+    Promise.all([
+      fetchSocieties().catch(() => [] as Society[]),
+      fetchScrapedSocieties().catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : (e as { message?: string })?.message ?? String(e)
+        setError(msg)
+        return [] as ScrapedSociety[]
+      }),
+    ])
       .then(([all, scraped]) => setSocieties(merge(all, scraped)))
-      .catch((e: unknown) => setError(String(e)))
       .finally(() => setLoading(false))
   }, [])
 
